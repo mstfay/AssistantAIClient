@@ -1,7 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Container, Typography, Paper } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { isTokenValid } from "../api/auth";
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isTokenValid()) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
   return (
     <Container maxWidth="md" sx={{ mt: 5 }}>
       <Paper sx={{ p: 3, textAlign: "center" }}>

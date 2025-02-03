@@ -1,17 +1,33 @@
 import React, { useState } from "react";
-import { Container, TextField, Button, Paper, Typography } from "@mui/material";
+import { Container, TextField, Button, Paper, Typography, Snackbar, Alert, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) navigate("/");
+    setLoading(true);
+    const response = await login(email, password);
+
+    if (response.success) {
+      setSnackbarMessage(response.message || "Giriş başarılı!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } else {
+      setSnackbarMessage(response.message || "Giriş başarısız!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+    setLoading(false);
   };
 
   return (
@@ -34,11 +50,22 @@ const Login = () => {
             margin="normal"
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
-            Giriş Yap
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "Giriş Yap"}
           </Button>
         </form>
       </Paper>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} variant="filled">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
