@@ -10,6 +10,9 @@ import SiteSettings from "./pages/Admin/SiteSettings";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import PDFSummarizer from "./pages/AI/PDFSummarizer";
+import ImageEditor from "./pages/AI/ImageEditor";
+import Chatbot from "./pages/AI/Chatbot";
 
 const theme = createTheme({
   palette: {
@@ -27,15 +30,18 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <Router>
         <Routes>
-          <Route path="/Home" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout />}>
+            <Route path="/Home" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="premium" element={<Premium />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/settings" element={<SiteSettings />} />
+            <Route path="ai/chatbot" element={<Chatbot />} />
+            <Route path="ai/image-editor" element={<ImageEditor />} />
+            <Route path="ai/pdf-summarizer" element={<PDFSummarizer />} />
           </Route>
         </Routes>
       </Router>

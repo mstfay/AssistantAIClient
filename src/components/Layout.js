@@ -5,14 +5,18 @@ import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 
 const Layout = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev); // Açıkken kapat, kapalıyken aç
+  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <CssBaseline />
-      <Navbar setMobileOpen={setMobileOpen} />
+      <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       <Box sx={{ display: "flex", flexGrow: 1 }}>
-        <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <Box component="main" sx={{ flexGrow: 1, p: 3, mt: "64px" }}>
           <Outlet />
         </Box>

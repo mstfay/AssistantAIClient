@@ -88,7 +88,7 @@ export const getUserInfo = async () => {
 
 export const getUserRole = () => {
   const token = localStorage.getItem("token");
-
+  
   if (!token || token === "undefined") {
     console.error("Token mevcut değil veya geçersiz!");
     return "Guest"; // Kullanıcı giriş yapmadıysa Guest olarak kabul edelim
@@ -96,7 +96,7 @@ export const getUserRole = () => {
 
   try {
     const decoded = jwtDecode(token);
-    
+    console.log("test", decoded.role)
     if (!decoded || !decoded.role) {
       console.error("Token geçersiz veya role bilgisi eksik:", decoded);
       return "Guest";
