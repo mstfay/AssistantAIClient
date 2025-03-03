@@ -51,9 +51,9 @@ const ChatApp = () => {
           "Authorization": "Bearer " + localStorage.getItem("token"),
         },
       });
-      const data = await response.json();
-      if (data.success) {
-        setHeaders(data.headers || []);
+      const res = await response.json();
+      if (res.success) {
+        setHeaders(res.data || []);
       }
     } catch (error) {
       console.error("Headerlar alınırken hata:", error);
@@ -68,9 +68,9 @@ const ChatApp = () => {
           "Authorization": "Bearer " + localStorage.getItem("token"),
         },
       });
-      const data = await response.json();
-      if (data.success) {
-        setMessages(data.chatMessages || []);
+      const res = await response.json();
+      if (res.success) {
+        setMessages(res.data || []);
       }
     } catch (error) {
       console.error("Mesajlar alınırken hata:", error);
@@ -80,6 +80,8 @@ const ChatApp = () => {
   // Header tıklandığında
   const handleHeaderClick = (header) => {
     setSelectedHeader(header);
+    
+    console.log("selectedHeader***** ", selectedHeader)
     fetchMessages(header.id);
   };
 
@@ -122,14 +124,12 @@ const ChatApp = () => {
   // Mesaj gönderme POST: {API_URL}/send-message
   const handleSend = async () => {
     if (!input.trim()) return;
-
-    // POST edilecek veri:
-    // Eğer header seçili ise HeaderId gönder, aksi halde boş string (backend yeni header oluşturacak)
+  
     const payload = {
       Message: input,
-      HeaderId: selectedHeader ? selectedHeader.id : "",
+      HeaderId: selectedHeader ? selectedHeader.id : "", // Eğer header seçili değilse boş string gönderiyoruz
     };
-
+  
     try {
       const response = await fetch(`${API_URL}/send-message`, {
         method: "POST",
@@ -141,19 +141,24 @@ const ChatApp = () => {
       });
       const res = await response.json();
       if (res.success) {
-        // Gönderilen kullanıcı mesajını ve backend tarafından dönen bot yanıtını ekle.
-        const newUserMessage = { text: input, sender: "user" };
-        const newBotMessage = { text: res.data, sender: "bot" };
+        // Backend tarafından dönen bot mesajı nesnesi (ChatMessage) örneğin:
+        const botMsg = res.data; // Bot mesajı nesnesi
+        const newUserMessage = { message: input, sender: "user" };
+        const newBotMessage = { message: botMsg.message, sender: "bot" };
 
-        setMessages((prev) => [...prev, newUserMessage, newBotMessage]);
-
-        // Eğer yeni bir header oluşturulduysa, header listesini yeniden çek
-        if (!selectedHeader) {
-          fetchHeaders();
-          // Dönen response'dan yeni header bilgilerini alıp setSelectedHeader yapılabilir.
-        } else {
-          // Mevcut header ise, yeniden mesajları çekmek için:
-          fetchMessages(selectedHeader.id);
+        if (!selectedHeader && botMsg.headerId) {
+          // Eğer seçili header yoksa, backend yeni header oluşturdu demektir.
+          // Header nesnesi tam olarak dönmüyorsa, title'ı kendimiz oluşturabiliriz.
+          const newHeader = { id: botMsg.headerId, title: input.slice(0, 15) };
+          // Yeni oluşturulan header'ı header listesine ekleyin
+          setHeaders(prev => [newHeader, ...prev]);
+          // Seçili header olarak ayarlanıyor
+          setSelectedHeader(newHeader);
+          // Mesajlar listesini yeni mesajlarla başlatın
+          setMessages([newUserMessage, newBotMessage]);
+        } else if (selectedHeader) {
+          // Eğer header zaten seçiliyse, sadece mesajları ekleyin
+          setMessages(prev => [...prev, newUserMessage, newBotMessage]);
         }
       } else {
         console.error("Mesaj gönderme hatası:", res.message);
@@ -163,6 +168,8 @@ const ChatApp = () => {
     }
     setInput("");
   };
+  
+  
 
   return (
     <Container maxWidth="lg" sx={{ display: "flex", height: "90vh", py: 2 }}>
@@ -179,7 +186,8 @@ const ChatApp = () => {
           Yeni Sohbet Başlat
         </Button>
         <List>
-          {headers.map((header) => (
+          {headers.map((header) => {
+            return (
             <ListItem
               key={header.id}
               button
@@ -195,7 +203,8 @@ const ChatApp = () => {
                 <MoreVertIcon />
               </IconButton>
             </ListItem>
-          ))}
+          )
+})}
         </List>
         <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose}>
           <MenuItem onClick={handleEditHeader}>Başlığı Düzenle</MenuItem>
@@ -209,28 +218,20 @@ const ChatApp = () => {
           {selectedHeader ? selectedHeader.title : "Chatbot"}
         </Typography>
         <Paper sx={{ flexGrow: 1, p: 2, overflowY: "auto", mb: 2 }}>
-          {messages.map((message, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                justifyContent: message.sender === "user" ? "flex-end" : "flex-start",
-                mb: 1,
-              }}
-            >
-              <Paper
-                sx={{
-                  p: 1,
-                  backgroundColor: message.sender === "user" ? "#1976d2" : "#f5f5f5",
-                  color: message.sender === "user" ? "#fff" : "#000",
-                }}
-              >
-                <Typography variant="body1">{message.text}</Typography>
-              </Paper>
-            </Box>
-          ))}
-          <div ref={messagesEndRef} />
+            {messages.map((message, index) => {
+              return (
+                      <Box
+                      key={index}
+                      sx={{display: "flex", justifyContent: message.sender === "user" ? "flex-end" : "flex-start", mb: 1, }}>
+                        <Paper sx={{ p: 1, backgroundColor: message.sender === "user" ? "#1976d2" : "#f5f5f5", color: message.sender === "user" ? "#fff" : "#000", }}>
+          <Typography variant="body1">{message.message}</Typography>
         </Paper>
+      </Box>
+      );
+      })}
+      <div ref={messagesEndRef} />
+      </Paper>
+
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
             fullWidth

@@ -1,25 +1,21 @@
-// src/api/auth.js
-
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-
-const API_URL = "https://localhost:7033/api/user";
+import axiosInstance from "./axiosInstance";
+import Roles from "../constants/roles";
 
 // Kullanıcı giriş fonksiyonu
 export const login = async (email, password) => {
   try {
-    const res = await axios.post(`${API_URL}/login`, { email, password });
-
+    const res = await axiosInstance.post("/user/login", { email, password });
     if (res.data.success) {
-      console.log(res.data)
+      console.log("Login response:", res.data);
       localStorage.setItem("token", res.data.data);
+      console.log("Token stored:", localStorage.getItem("token"));
       window.dispatchEvent(new Event("authChange")); // Navbar ve Sidebar güncellenecek
       return {
         success: true,
         message: res.data.message || "Giriş başarılı!",
       };
     }
-
     return {
       success: false,
       message: res.data.message || "Giriş başarısız!",
@@ -35,7 +31,7 @@ export const login = async (email, password) => {
 // Kullanıcı kayıt fonksiyonu
 export const register = async (userData) => {
   try {
-    const res = await axios.post(`${API_URL}/register`, userData);
+    const res = await axiosInstance.post("/user/register", userData);
     if (res.data.success) {
       return {
         success: true,
@@ -58,13 +54,23 @@ export const register = async (userData) => {
 // Kullanıcının token geçerliliğini kontrol etme
 export const isTokenValid = () => {
   const token = localStorage.getItem("token");
-  if (!token) return false;
+  console.log("token alanına geldi: ", token)
+  if (!token) {
+    console.log("Token mevcut değil.");
+    return false;
+  }
 
   try {
     const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000;
-    return decoded.exp > currentTime;
+    if (decoded.exp > currentTime) {
+      return true;
+    } else {
+      console.error("Token süresi dolmuş.");
+      return false;
+    }
   } catch (err) {
+    console.error("Token decode edilemedi:", err);
     return false;
   }
 };
@@ -75,7 +81,7 @@ export const getUserInfo = async () => {
     const token = localStorage.getItem("token");
     if (!token) return null;
 
-    const res = await axios.get(`${API_URL}/profile`, {
+    const res = await axiosInstance.get("/user/profile", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -90,8 +96,8 @@ export const getUserRole = () => {
   const token = localStorage.getItem("token");
   
   if (!token || token === "undefined") {
-    console.error("Token mevcut değil veya geçersiz!");
-    return "Guest"; // Kullanıcı giriş yapmadıysa Guest olarak kabul edelim
+    console.log("Token mevcut değil veya geçersiz!");
+    return Roles.GUEST; // Kullanıcı giriş yapmadıysa Guest olarak kabul edelim
   }
 
   try {
@@ -99,18 +105,15 @@ export const getUserRole = () => {
     console.log("test", decoded.role)
     if (!decoded || !decoded.role) {
       console.error("Token geçersiz veya role bilgisi eksik:", decoded);
-      return "Guest";
+      return Roles.GUEST;
     }
 
     return decoded.role; // Token içinden rolü çekiyoruz
   } catch (err) {
     console.error("Geçersiz token veya decode hatası:", err);
-    return "Guest";
+    return Roles.GUEST;
   }
 };
-
-
-
 
 // **Logout Fonksiyonu Ekledik**
 export const logout = () => {

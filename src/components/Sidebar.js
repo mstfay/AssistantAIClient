@@ -1,14 +1,21 @@
 import React, { useEffect } from "react";
-import { Drawer, List, ListItem, ListItemText, Toolbar, Button } from "@mui/material";
+import { Drawer, List, ListItem, ListItemText, ListItemButton, Toolbar } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRole, isTokenValid, logout } from "../api/auth";
+import Roles from "../constants/roles";
 
 const drawerWidth = 240;
 
-const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
+const Sidebar = ({ isSidebarOpen, toggleSidebar, setIsSidebarOpen }) => {
   const navigate = useNavigate();
-  const userRole = getUserRole();
   const isAuthenticated = isTokenValid();
+  const userRole = getUserRole();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
 
   // Sidebar dışına tıklayınca kapanması için event listener
   useEffect(() => {
@@ -23,6 +30,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         avatarElement &&
         !avatarElement.contains(event.target)
       ) {
+        
         toggleSidebar(); // Sidebar dışına basınca kapat
       }
     };
@@ -35,55 +43,58 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
   const handleLogout = () => {
     logout();
+    setIsSidebarOpen(false); // Sidebar'ı kapat
     navigate("/login");
   };
 
   if (!isAuthenticated) return null;
 
   return (
-    <Drawer
-      id="sidebar"
-      variant="temporary"
-      anchor="right"
-      open={isSidebarOpen}
-      onClose={toggleSidebar}
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
+    <>
+      <Drawer
+        id="sidebar"
+        variant="temporary"
+        anchor="right"
+        open={isSidebarOpen}
+        onClose={toggleSidebar}
+        sx={{
           width: drawerWidth,
-          boxSizing: "border-box",
-        },
-      }}
-    >
-      <Toolbar />
-      <List>
-        <ListItem button component={Link} to="/dashboard" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
-          <ListItemText primary="Dashboard" />
-        </ListItem>
-        <ListItem button component={Link} to="/profile" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
-          <ListItemText primary="Profilim" />
-        </ListItem>
-        {userRole === "premium" && (
-          <ListItem button component={Link} to="/premium" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
-            <ListItemText primary="Premium İçerik" />
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+          },
+        }}
+      >
+        <Toolbar />
+        <List>
+          <ListItem component={Link} to="/dashboard" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
+            <ListItemText primary="Dashboard" />
           </ListItem>
-        )}
-        {userRole === "Admin" && (
-          <>
-            <ListItem button component={Link} to="/admin/users" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
-              <ListItemText primary="Kullanıcı Yönetimi" />
+          <ListItem component={Link} to="/profile" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
+            <ListItemText primary="Profilim" />
+          </ListItem>
+          {userRole === Roles.PREMIUM && (
+            <ListItem component={Link} to="/premium" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
+              <ListItemText primary="Premium İçerik" />
             </ListItem>
-            <ListItem button component={Link} to="/admin/settings" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
-              <ListItemText primary="Site Ayarları" />
-            </ListItem>
-          </>
-        )}
-        <ListItem button onClick={handleLogout} sx={{ cursor: "pointer" }}>
-          <ListItemText primary="Çıkış Yap" />
-        </ListItem>
-      </List>
-    </Drawer>
+          )}
+          {userRole === Roles.ADMIN && (
+            <>
+              <ListItem component={Link} to="/admin/users" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
+                <ListItemText primary="Kullanıcı Yönetimi" />
+              </ListItem>
+              <ListItem component={Link} to="/admin/settings" onClick={toggleSidebar} sx={{ cursor: "pointer" }}>
+                <ListItemText primary="Site Ayarları" />
+              </ListItem>
+            </>
+          )}
+          <ListItemButton onClick={handleLogout} sx={{ cursor: "pointer" }}>
+            <ListItemText primary="Çıkış Yap" />
+            </ListItemButton>
+        </List>
+      </Drawer>
+    </>
   );
 };
 

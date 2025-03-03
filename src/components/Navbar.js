@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AppBar, Toolbar, Typography, Button, Box, Avatar, IconButton, Drawer, List, ListItem, ListItemText, CircularProgress, Tooltip } from "@mui/material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { fetchOldConversations } from "../api/chat";
 import { isTokenValid, getUserInfo } from "../api/auth";
 import PushPinIcon from "@mui/icons-material/PushPin"; // Raptiye ikonu
@@ -9,6 +9,7 @@ const Navbar = ({ toggleSidebar }) => {
   const isAuthenticated = isTokenValid();
   const user = getUserInfo();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false); // Drawer pinlendi mi?
@@ -56,13 +57,21 @@ const Navbar = ({ toggleSidebar }) => {
     setIsPinned(!isPinned);
   };
 
+  const handleTitleClick = () => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    } else {
+      navigate("/home");
+    }
+  };
+
   return (
     <>
       <AppBar position="fixed" sx={{ width: "100%", zIndex: 1300 }}>
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Typography
             variant="h6"
-            onMouseEnter={handleDrawerToggle}
+            onClick={handleTitleClick}
             sx={{ cursor: "pointer" }}
           >
             AssistantAI
@@ -74,7 +83,11 @@ const Navbar = ({ toggleSidebar }) => {
                 <Button color="inherit" component={Link} to="/dashboard">
                   Dashboard
                 </Button>
-                <IconButton onClick={toggleSidebar}>
+                <IconButton
+                  onClick={() => {
+                    toggleSidebar();
+                  }}
+                >
                   <Avatar src={user?.profilePicture || "/default-avatar.png"} alt="Profil" />
                 </IconButton>
               </>
@@ -92,36 +105,37 @@ const Navbar = ({ toggleSidebar }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer */}
-      <Drawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onMouseLeave={handleMouseLeave} // Fare drawer dışına çıkınca kapanır (eğer pinlenmemişse)
-      >
-        <List sx={{ width: 250 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2 }}>
-            <Typography variant="h6">Eski Konuşmalar</Typography>
-            <Tooltip title={isPinned ? "Raptiyeyi Kaldır" : "Raptiyele"}>
-              <IconButton onClick={togglePin}>
-                <PushPinIcon color={isPinned ? "primary" : "disabled"} />
-              </IconButton>
-            </Tooltip>
-          </Box>
-
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <CircularProgress />
+      {isAuthenticated && (
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onMouseLeave={handleMouseLeave} // Fare drawer dışına çıkınca kapanır (eğer pinlenmemişse)
+        >
+          <List sx={{ width: 250 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2 }}>
+              <Typography variant="h6">Eski Konuşmalar</Typography>
+              <Tooltip title={isPinned ? "Raptiyeyi Kaldır" : "Raptiyele"}>
+                <IconButton onClick={togglePin}>
+                  <PushPinIcon color={isPinned ? "primary" : "disabled"} />
+                </IconButton>
+              </Tooltip>
             </Box>
-          ) : (
-            conversations.map((item, index) => (
-              <ListItem button key={index}>
-                <ListItemText primary={item.title || `Konuşma ${index + 1}`} />
-              </ListItem>
-            ))
-          )}
-        </List>
-      </Drawer>
+
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              conversations.map((item, index) => (
+                <ListItem button key={index}>
+                  <ListItemText primary={item.title || `Konuşma ${index + 1}`} />
+                </ListItem>
+              ))
+            )}
+          </List>
+        </Drawer>
+      )}
     </>
   );
 };

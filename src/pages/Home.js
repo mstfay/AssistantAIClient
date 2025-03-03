@@ -9,6 +9,8 @@ const Home = () => {
   useEffect(() => {
     if (isTokenValid()) {
       navigate("/dashboard");
+    } else {
+      navigate("/home");
     }
   }, [navigate]);
 
