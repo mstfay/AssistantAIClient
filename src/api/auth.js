@@ -54,9 +54,7 @@ export const register = async (userData) => {
 // Kullanıcının token geçerliliğini kontrol etme
 export const isTokenValid = () => {
   const token = localStorage.getItem("token");
-  console.log("token alanına geldi: ", token)
   if (!token) {
-    console.log("Token mevcut değil.");
     return false;
   }
 
@@ -67,10 +65,14 @@ export const isTokenValid = () => {
       return true;
     } else {
       console.error("Token süresi dolmuş.");
+      localStorage.removeItem("token"); // Token süresi dolduğunda tokeni sil
+      window.dispatchEvent(new Event("authChange")); // Navbar ve Sidebar güncellenecek
       return false;
     }
   } catch (err) {
     console.error("Token decode edilemedi:", err);
+    localStorage.removeItem("token"); // Token decode edilemediğinde tokeni sil
+    window.dispatchEvent(new Event("authChange")); // Navbar ve Sidebar güncellenecek
     return false;
   }
 };
@@ -97,20 +99,17 @@ export const getUserRole = () => {
   
   if (!token || token === "undefined") {
     console.log("Token mevcut değil veya geçersiz!");
-    return Roles.GUEST; // Kullanıcı giriş yapmadıysa Guest olarak kabul edelim
+    return Roles.GUEST;
   }
 
   try {
     const decoded = jwtDecode(token);
-    console.log("test", decoded.role)
     if (!decoded || !decoded.role) {
-      console.error("Token geçersiz veya role bilgisi eksik:", decoded);
       return Roles.GUEST;
     }
 
     return decoded.role; // Token içinden rolü çekiyoruz
   } catch (err) {
-    console.error("Geçersiz token veya decode hatası:", err);
     return Roles.GUEST;
   }
 };

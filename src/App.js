@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -15,6 +15,7 @@ import ImageEditor from "./pages/AI/ImageEditor";
 import Chatbot from "./pages/AI/Chatbot";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
+import { isTokenValid } from "./api/auth";
 
 const theme = createTheme({
   palette: {
@@ -27,12 +28,28 @@ const theme = createTheme({
   },
 });
 
+const RedirectToAppropriatePage = () => {
+  const navigate = useNavigate();
+  const isAuthenticated = isTokenValid();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    } else {
+      navigate("/home");
+    }
+  }, [isAuthenticated, navigate]);
+
+  return null;
+};
+
 const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <Router>
         <Routes>
           <Route path="/" element={<Layout />}>
+            <Route index element={<RedirectToAppropriatePage />} />
             <Route
               path="/home"
               element={

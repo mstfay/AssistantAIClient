@@ -3,6 +3,7 @@ import { Form, Input, Button, Avatar, Upload, message, Card, Row, Col } from "an
 import { UploadOutlined, EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import { getUserInfo } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Profile = () => {
         if (!res) {
           navigate("/login");
         } else {
+          console.log("datassssss: ", res.data)
           setUser(res.data);
           form.setFieldsValue(res.data);
         }
@@ -32,13 +34,11 @@ const Profile = () => {
   const handleUpdate = async (values) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch("https://localhost:7033/api/user/update-profile", {
-        method: "PUT",
+      console.log("values: ", values)
+      await axiosInstance.put("/user/update-profile", values, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(values),
       });
 
       message.success("Profil güncellendi!");
@@ -51,7 +51,7 @@ const Profile = () => {
   if (loading) return <p style={{ textAlign: "center", marginTop: "20px" }}>Yükleniyor...</p>;
 
   return (
-    <Row justify="center" align="middle" style={{ minHeight: "100vh", padding: "20px" }}>
+    <Row justify="center" align="middle" style={{ minHeight: "80vh", padding: "20px" }}>
       <Col xs={24} sm={20} md={16} lg={12} xl={8}>
         <Card
           style={{ textAlign: "center", borderRadius: "10px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
